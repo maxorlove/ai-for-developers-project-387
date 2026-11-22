@@ -52,11 +52,17 @@ jobs:
         working-directory: ${{ runner.temp }}
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          OPENCODE_CONFIG_CONTENT: '{"permission":{"*":"deny"},"share":"disabled"}'
         run: |
-          npx --yes opencode-ai@1.3.0 run --model opencode/big-pickle --format json < review-input.md > review-events.jsonl
-          jq -sr 'map(select(.type == "text") | .part.text) | join("\n")' review-events.jsonl > review.md
-          test -s review.md && grep -q '[^[:space:]]' review.md
+          jq -n --rawfile prompt review-input.md '{model:"big-pickle", messages:[{role:"user",content:$prompt}]}' > request.json
+          status=$(curl --silent --show-error --max-time 240 --output response.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $OPENCODE_API_KEY" --header 'Content-Type: application/json' \
+            --data-binary @request.json https://opencode.ai/inference/openai/v1/chat/completions)
+          if [[ "$status" != 200 ]]; then
+            echo "OpenCode returned HTTP $status"
+            jq -r '.error.code // .error.type // "inference failed"' response.json
+            exit 1
+          fi
+          jq -er '.choices[0].message.content | strings | select(length > 0)' response.json > review.md
       - name: Publish for the reviewed head
         if: ${{ !cancelled() && steps.policy.outputs.available == 'true' }}
         env:
