@@ -54,7 +54,7 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           OPENCODE_CONFIG_CONTENT: '{"permission":{"*":"deny"},"share":"disabled"}'
         run: |
-          npx --yes opencode-ai@1.3.0 run --model opencode/big-pickle --format json < review-input.md > review-events.jsonl
+          npx --yes opencode-ai@1.19.6 run --model opencode/big-pickle --format json < review-input.md > review-events.jsonl
           jq -sr 'map(select(.type == "text") | .part.text) | join("\n")' review-events.jsonl > review.md
           test -s review.md && grep -q '[^[:space:]]' review.md
       - name: Publish for the reviewed head

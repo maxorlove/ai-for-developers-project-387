@@ -72,7 +72,7 @@ jobs:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           OPENCODE_CONFIG_CONTENT: '{"permission":{"*":"deny"},"share":"disabled"}'
         run: |
-          npx --yes opencode-ai@1.3.0 run --model opencode/big-pickle --format json < audit-prompt.txt > audit-events.jsonl
+          npx --yes opencode-ai@1.19.6 run --model opencode/big-pickle --format json < audit-prompt.txt > audit-events.jsonl
           jq -ser '[.[] | select(.type == "text") | .part.text] | join("\n") | select(length > 0)' audit-events.jsonl > audit-answer.txt
       - name: Publish agent conclusion
         env:
