@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Запись на звонок · Календарь звонков</title>
+    <link rel="stylesheet" href="/src/style.css" />
+    <link rel="stylesheet" href="/src/booking.css" />
+  </head>
+  <body class="booking-page">
+    <main>
+      <a class="home-link" href="/">На главную</a>
+      <h1>Запись на звонок</h1>
+      <p id="catalog-status" role="status"></p>
+      <ul id="event-types" role="list" aria-label="Типы встреч" hidden></ul>
+      <p id="calendar-status" role="status"></p>
+      <section id="booking-calendar" hidden>
+        <h2 id="calendar-heading"></h2>
+        <p id="booking-time-zone"></p>
+        <div class="booking-day-field">
+          <label for="booking-day">День</label>
+          <div class="booking-day-control">
+            <select id="booking-day"></select>
+          </div>
+        </div>
+        <p id="slots-status" role="status"></p>
+        <ul id="booking-slots" role="list" aria-label="Свободные слоты"></ul>
+        <div id="booking-selection" hidden>
+          <p id="booking-selection-details"></p>
+          <button id="confirm-booking" type="button">Подтвердить запись</button>
+        </div>
+      </section>
+      <p id="booking-status" role="alert"></p>
+      <div role="status">
+        <section id="booking-confirmation" aria-labelledby="booking-confirmation-title" hidden>
+          <h2 id="booking-confirmation-title">Запись подтверждена</h2>
+          <p id="booking-confirmation-details"></p>
+          <a href="/my-bookings/">Мои бронирования</a>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="/src/booking.ts"></script>
+  </body>
+</html>

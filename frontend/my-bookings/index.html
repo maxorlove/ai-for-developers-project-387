@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Мои бронирования · Календарь звонков</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <main>
+      <a href="/">На главную</a>
+      <h1>Мои бронирования</h1>
+      <p>Предстоящие звонки, на которые вы записались в этом браузере.</p>
+      <p id="upcoming-bookings-status" role="status">Загружаем записи…</p>
+      <ul id="upcoming-bookings-list" hidden></ul>
+      <a class="booking-link" href="/booking/">Записаться на звонок</a>
+    </main>
+    <script type="module" src="/src/my-bookings.ts"></script>
+  </body>
+</html>
