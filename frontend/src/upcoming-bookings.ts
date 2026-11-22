@@ -15,6 +15,10 @@ export async function showUpcomingBookings(include?: (id: string) => boolean) {
     for (const booking of bookings) {
       const item = document.createElement('li')
       item.textContent = `«${booking.eventTypeTitle}» — ${formatInterval(booking, 'Europe/Moscow')}, Москва.`
+      if (!include && booking.topic) {
+        item.append(` Тема звонка — ${booking.topic}`)
+      }
+
       list.append(item)
     }
 

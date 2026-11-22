@@ -15,6 +15,7 @@ const slotsList = document.querySelector<HTMLUListElement>('#booking-slots')!
 const bookingStatus = document.querySelector<HTMLParagraphElement>('#booking-status')!
 const selection = document.querySelector<HTMLElement>('#booking-selection')!
 const selectionDetails = document.querySelector<HTMLParagraphElement>('#booking-selection-details')!
+const topicInput = document.querySelector<HTMLTextAreaElement>('#booking-topic')!
 const confirmButton = document.querySelector<HTMLButtonElement>('#confirm-booking')!
 const confirmation = document.querySelector<HTMLElement>('#booking-confirmation')!
 const confirmationDetails = document.querySelector<HTMLParagraphElement>('#booking-confirmation-details')!
@@ -149,6 +150,12 @@ confirmButton.addEventListener('click', async () => {
     return
   }
 
+  const topic = topicInput.value
+  topicInput.setCustomValidity([...topic].length > 200 ? 'Сократите тему звонка до 200 символов.' : '')
+  if (!topicInput.reportValidity()) {
+    return
+  }
+
   const day = daySelect.value
   const { timeZone } = view.availability
   bookingPending = true
@@ -157,7 +164,7 @@ confirmButton.addEventListener('click', async () => {
   bookingStatus.textContent = ''
 
   const { data, error, response } = await createBooking({
-    body: { eventTypeId: view.eventType.id, startsAt: slot.startsAt },
+    body: { eventTypeId: view.eventType.id, startsAt: slot.startsAt, ...(topic.trim() && { topic }) },
   })
   bookingPending = false
 
@@ -166,6 +173,10 @@ confirmButton.addEventListener('click', async () => {
   const confirmed = response?.status === 201 && data
   const conflict = response?.status === 409 && error?.code === 'slot_taken'
   if (confirmed) {
+    if (topicInput.value === topic) {
+      topicInput.value = ''
+    }
+
     confirmationDetails.textContent = `«${data.eventTypeTitle}» — ${formatInterval(data, timeZone)}, Москва.`
     if (!rememberBooking(data.id)) {
       confirmationDetails.append(' Браузер не смог сохранить запись в разделе «Мои бронирования».')

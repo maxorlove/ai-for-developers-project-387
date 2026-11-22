@@ -229,17 +229,27 @@ test('a guest books a call and the owner sees the same meeting', async ({ page, 
   await page.getByRole('button', { name: 'Выбрать «Знакомство»' }).click()
   await page.getByLabel('День').selectOption('2026-11-22')
   await page.getByRole('button', { name: '10:00', exact: true }).click()
+  const topic = '📞'.repeat(200)
+  const topicInput = page.getByLabel('Тема звонка')
+  await topicInput.fill(topic + 'я')
+  await page.getByRole('button', { name: 'Подтвердить запись' }).click()
+  await expect(topicInput).toBeFocused()
+  await expect(page.getByRole('region', { name: 'Запись подтверждена' })).toBeHidden()
+  await topicInput.fill(topic)
   await page.getByRole('button', { name: 'Подтвердить запись' }).click()
 
   const details = /Знакомство.*22 ноября.*10:00–10:30.*Москва/
   const confirmation = page.getByRole('region', { name: 'Запись подтверждена' })
   await expect(confirmation).toContainText(details)
+  await expect(confirmation).not.toContainText(topic)
 
   await owner.reload()
   await expect(upcoming.getByRole('listitem')).toHaveText(details)
+  await expect(upcoming.getByRole('listitem')).toContainText(topic)
 
   await confirmation.getByRole('link', { name: 'Мои бронирования' }).click()
   await expect(page.getByRole('listitem')).toHaveText(details)
+  await expect(page.getByRole('listitem')).not.toContainText(topic)
   await page.getByRole('link', { name: 'Записаться на звонок' }).click()
   await page.getByRole('button', { name: 'Выбрать «Знакомство»' }).click()
   await page.getByLabel('День').selectOption('2026-11-21')
@@ -366,6 +376,8 @@ test('guests see their own bookings after a conflict and the owner sees both', a
   await day.selectOption('2026-11-23')
   const overlappingSlot = secondGuest.getByRole('button', { name: '10:30', exact: true })
   await overlappingSlot.click()
+  await page.getByLabel('Тема звонка').fill('Первая тема')
+  await secondGuest.getByLabel('Тема звонка').fill('Вторая тема')
 
   const consultation = /Консультация.*23 ноября.*10:00–11:00.*Москва/
   const intro = /Знакомство.*23 ноября.*11:00–11:30.*Москва/
@@ -376,6 +388,11 @@ test('guests see their own bookings after a conflict and the owner sees both', a
   await confirm.click()
   await expect(secondGuest.getByRole('alert')).toHaveText('Это время уже занято. Выберите другой слот.')
   await expect(overlappingSlot).toHaveCount(0)
+  await owner.reload()
+  const ownerRows = owner.getByRole('region', { name: 'Предстоящие записи' }).getByRole('listitem')
+  await expect(ownerRows).toHaveCount(1)
+  await expect(ownerRows).toContainText('Первая тема')
+  await expect(ownerRows).not.toContainText('Вторая тема')
   await expect(day).toHaveValue('2026-11-23')
 
   const secondGuestBookings = await guestContext.newPage()
