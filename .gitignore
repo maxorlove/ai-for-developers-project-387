@@ -1,0 +1,5 @@
+node_modules/
+dist/
+/api/generated/
+/test-results/
+/.codex/config.toml
