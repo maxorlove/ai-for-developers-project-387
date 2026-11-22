@@ -1,0 +1,80 @@
+name: Booking page audit
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+    inputs:
+      report_run:
+        description: 'ID предыдущего запуска для повтора с тем же отчётом (необязательно)'
+        type: string
+        required: false
+
+permissions: {}
+
+concurrency:
+  group: booking-page-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    env:
+      APP_URL: ${{ vars.APP_URL || 'https://maxorlove-call-calendar.onrender.com/booking/' }}
+      REPORT_RUN: ${{ inputs.report_run }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Collect Lighthouse report
+        if: env.REPORT_RUN == ''
+        working-directory: ${{ runner.temp }}
+        run: |
+          npx --yes lighthouse@12.8.2 "$APP_URL" --quiet --only-audits=meta-description,http-status-code \
+            --chrome-flags="--headless --no-sandbox" --output=json --output-path=./lighthouse.json
+      - name: Verify source run
+        if: env.REPORT_RUN != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          [[ "$REPORT_RUN" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$REPORT_RUN" |
+            jq -e --arg branch "$DEFAULT_BRANCH" '.head_branch == $branch and .conclusion == "success" and .path == ".github/workflows/calendar-audit.yml"'
+      - uses: actions/download-artifact@v4
+        if: env.REPORT_RUN != ''
+        with:
+          name: lighthouse
+          path: ${{ runner.temp }}
+          run-id: ${{ inputs.report_run }}
+          github-token: ${{ github.token }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse
+          path: ${{ runner.temp }}/lighthouse.json
+          overwrite: true
+          if-no-files-found: error
+          retention-days: 14
+      - name: Prepare audit and issue history
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/calendar-audit.py prepare
+      - name: Analyze report with OpenCode
+        working-directory: ${{ runner.temp }}
+        timeout-minutes: 6
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENCODE_CONFIG_CONTENT: '{"permission":{"*":"deny"},"share":"disabled"}'
+        run: |
+          npx --yes opencode-ai@1.3.0 run --model opencode/big-pickle --format json < audit-prompt.txt > audit-events.jsonl
+          jq -ser '[.[] | select(.type == "text") | .part.text] | join("\n") | select(length > 0)' audit-events.jsonl > audit-answer.txt
+      - name: Publish agent conclusion
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/calendar-audit.py publish
