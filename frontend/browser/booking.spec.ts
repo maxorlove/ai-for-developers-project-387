@@ -249,7 +249,7 @@ test('a guest books a call and the owner sees the same meeting', async ({ page, 
 
   await confirmation.getByRole('link', { name: 'Мои бронирования' }).click()
   await expect(page.getByRole('listitem')).toHaveText(details)
-  await expect(page.getByRole('listitem')).not.toContainText(topic)
+  await expect(page.getByRole('listitem')).toContainText(topic)
   await page.getByRole('link', { name: 'Записаться на звонок' }).click()
   await page.getByRole('button', { name: 'Выбрать «Знакомство»' }).click()
   await page.getByLabel('День').selectOption('2026-11-21')
