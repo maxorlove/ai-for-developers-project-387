@@ -1,0 +1,39 @@
+name: Issue triage
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  triage:
+    if: >-
+      github.event.issue.user.type == 'User' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.issue.author_association) &&
+      !contains(github.event.issue.labels.*.name, 'ready-for-agent') &&
+      !contains(github.event.issue.labels.*.name, 'ready-for-human')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: triage-issue-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: anomalyco/opencode/github@latest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          use_github_token: true
+          model: opencode/big-pickle
+          share: 'false'
+          prompt: |
+            Проведи предварительный разбор открытого обращения по проектному скиллу triage.
+            Прочитай AGENTS.md и docs/agents/, сверь потребность с текущим кодом календаря.
+            Ответь одним комментарием на русском в исходном issue. Опиши текущее поведение,
+            задай вопросы о недостающих условиях и предложи следующий шаг.
+            Решение о работе над задачей оставь владельцу. Сохрани код и статус задачи.

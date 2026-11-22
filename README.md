@@ -66,6 +66,10 @@ docker run --rm -e PORT=8080 -p 8080:8080 call-calendar
 
 Ответ появится в обсуждении. Ход выполнения и результат видны в [Actions → OpenCode](https://github.com/maxorlove/ai-for-developers-project-387/actions/workflows/opencode.yml). На одну задачу или PR одновременно работает один агент, до 15 минут.
 
+### Автоматический разбор обращений
+
+Когда владелец, участник организации или соавтор открывает issue, OpenCode сверяет обращение с кодом календаря и оставляет в обсуждении вопросы и следующий шаг. Для запуска достаточно открыть задачу. Workflow пропускает обращения ботов и тикеты, созданные с меткой `ready-for-agent` или `ready-for-human`. История запусков доступна в [Actions → Issue triage](https://github.com/maxorlove/ai-for-developers-project-387/actions/workflows/issue-triage.yml).
+
 ## Проверки
 
 Перед первым запуском проверок установите Chromium для Playwright.
