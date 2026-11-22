@@ -70,10 +70,17 @@ jobs:
         timeout-minutes: 6
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-          OPENCODE_CONFIG_CONTENT: '{"permission":{"*":"deny"},"share":"disabled"}'
         run: |
-          npx --yes opencode-ai@1.19.6 run --model opencode/big-pickle --format json < audit-prompt.txt > audit-events.jsonl
-          jq -ser '[.[] | select(.type == "text") | .part.text] | join("\n") | select(length > 0)' audit-events.jsonl > audit-answer.txt
+          jq -n --rawfile prompt audit-prompt.txt '{model:"big-pickle", messages:[{role:"user",content:$prompt}]}' > request.json
+          status=$(curl --silent --show-error --max-time 240 --output response.json --write-out '%{http_code}' \
+            --header "Authorization: Bearer $OPENCODE_API_KEY" --header 'Content-Type: application/json' \
+            --data-binary @request.json https://opencode.ai/inference/openai/v1/chat/completions)
+          if [[ "$status" != 200 ]]; then
+            echo "OpenCode returned HTTP $status"
+            jq -r '.error.code // .error.type // "inference failed"' response.json
+            exit 1
+          fi
+          jq -er '.choices[0].message.content | strings | select(length > 0)' response.json > audit-answer.txt
       - name: Publish agent conclusion
         env:
           GH_TOKEN: ${{ github.token }}
