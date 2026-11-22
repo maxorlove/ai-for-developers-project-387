@@ -62,7 +62,7 @@ docker run --rm -e PORT=8080 -p 8080:8080 call-calendar
 
 Чтобы вызвать агента, начните новый комментарий в issue, обсуждении PR или у строки diff с `/oc` или `/opencode`. Например, `/oc explain this issue`. Workflow принимает команды владельца, участников организации и соавторов репозитория. Комментарии ботов и PR из форков пропускаются.
 
-Установите [OpenCode GitHub App](https://github.com/apps/opencode-agent) для этого репозитория. Для команд `/oc` и `/opencode` добавьте ключ OpenAI в [Actions Secrets](https://github.com/maxorlove/ai-for-developers-project-387/settings/secrets/actions) под именем `OPEN_API_KEY`. В [opencode.yml](.github/workflows/opencode.yml) выбрана модель `openai/gpt-6.2-sol`. Для триажа, авторевью и аудита нужен отдельный секрет `OPENCODE_API_KEY`. Публикация сессий отключена (`share: false`). Агент читает правила из `AGENTS.md`, настройки трекера из `docs/agents/` и проектные скиллы из `.agents/skills/`.
+Установите [OpenCode GitHub App](https://github.com/apps/opencode-agent) для этого репозитория и добавьте ключ OpenAI в [Actions Secrets](https://github.com/maxorlove/ai-for-developers-project-387/settings/secrets/actions) под именем `OPEN_API_KEY`. Все модельные воркфлоу используют GPT-6.2 Sol. Интерактивные команды и триаж вызывают OpenCode, независимое ревью и аудит обращаются к OpenAI Responses API. Публикация сессий отключена (`share: false`). Агент читает правила из `AGENTS.md`, настройки трекера из `docs/agents/` и проектные скиллы из `.agents/skills/`.
 
 Ответ появится в обсуждении. Ход выполнения и результат видны в [Actions → OpenCode](https://github.com/maxorlove/ai-for-developers-project-387/actions/workflows/opencode.yml). На одну задачу или PR одновременно работает один агент, до 15 минут.
 
@@ -82,7 +82,7 @@ docker run --rm -e PORT=8080 -p 8080:8080 call-calendar
 
 [Booking page audit](https://github.com/maxorlove/ai-for-developers-project-387/actions/workflows/calendar-audit.yml) запускается в 06:17 по Москве. Lighthouse открывает опубликованную страницу `/booking/`, проверяет успешный HTTP-ответ и наличие метаописания. Адрес по умолчанию ведёт на Render, его можно задать переменной Actions `APP_URL`.
 
-В **Run workflow** выберите `main`. Без параметров workflow измерит страницу заново. Для повтора с теми же данными укажите ID успешного запуска в `report_run`. JSON Lighthouse доступен в артефакте `lighthouse` 14 дней. Вывод OpenCode и ссылка на issue находятся в сводке запуска. Первую находку агент оформляет как входящую задачу. При повторе сводка указывает на ту же задачу. При недоступности страницы запуск завершается ошибкой.
+В **Run workflow** выберите `main`. Без параметров workflow измерит страницу заново. Для повтора с теми же данными укажите ID успешного запуска в `report_run`. JSON Lighthouse доступен в артефакте `lighthouse` 14 дней. Вывод модели и ссылка на issue находятся в сводке запуска. Первая находка становится входящей задачей, а чистый результат оформляется как учебная задача. Повтор того же результата для той же страницы указывает на существующую задачу. При недоступности страницы запуск завершается ошибкой.
 
 ## Проверки
 

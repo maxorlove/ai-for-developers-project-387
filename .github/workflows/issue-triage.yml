@@ -26,10 +26,10 @@ jobs:
       - uses: anomalyco/opencode/github@latest
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
         with:
           use_github_token: true
-          model: opencode/big-pickle
+          model: openai/gpt-6.2-sol
           share: 'false'
           prompt: |
             Проведи предварительный разбор открытого обращения по проектному скиллу triage.

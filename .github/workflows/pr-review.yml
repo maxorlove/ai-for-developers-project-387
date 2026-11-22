@@ -45,24 +45,26 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 .github/scripts/review-context.py
-      - name: Review with OpenCode
+      - name: Review with OpenAI
         if: steps.policy.outputs.available == 'true'
         id: review
         timeout-minutes: 10
         working-directory: ${{ runner.temp }}
         env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPEN_API_KEY }}
         run: |
-          jq -n --rawfile prompt review-input.md '{model:"big-pickle", messages:[{role:"user",content:$prompt}]}' > request.json
+          jq -n --rawfile prompt review-input.md '{model:"gpt-6.2-sol", input:$prompt, store:false}' > request.json
           status=$(curl --silent --show-error --max-time 240 --output response.json --write-out '%{http_code}' \
-            --header "Authorization: Bearer $OPENCODE_API_KEY" --header 'Content-Type: application/json' \
-            --data-binary @request.json https://opencode.ai/inference/openai/v1/chat/completions)
+            --header "Authorization: Bearer $OPENAI_API_KEY" --header 'Content-Type: application/json' \
+            --data-binary @request.json https://api.openai.com/v1/responses)
           if [[ "$status" != 200 ]]; then
-            echo "OpenCode returned HTTP $status"
+            echo "OpenAI returned HTTP $status"
             jq -r '.error.code // .error.type // "inference failed"' response.json
             exit 1
           fi
-          jq -er '.choices[0].message.content | strings | select(length > 0)' response.json > review.md
+          jq -er 'select(.status == "completed") |
+            [.output[] | select(.type == "message") | .content[] |
+            select(.type == "output_text") | .text] | join("\n") | select(length > 0)' response.json > review.md
       - name: Publish for the reviewed head
         if: ${{ !cancelled() && steps.policy.outputs.available == 'true' }}
         env:
