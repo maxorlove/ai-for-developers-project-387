@@ -4,7 +4,7 @@
 
 [![hexlet-check](https://github.com/maxorlove/ai-for-developers-project-387/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/maxorlove/ai-for-developers-project-387/actions)
 
-Во второй части проекта автоматизируем работу над календарём в GitHub. Правила бронирования описаны в [исходной спецификации](https://github.com/maxorlove/ai-for-developers-project-386/issues/1). Выбор отдельной страницы записи зафиксирован в [архитектурном решении первого проекта](https://github.com/maxorlove/ai-for-developers-project-386/blob/09d9574b7145d01a2c6e97935a63e5b2fea8d86c/docs/adr/0001-booking-entrypoint.md).
+Во второй части проекта автоматизируем работу над календарём в GitHub. Правила бронирования описаны в [исходной спецификации](https://github.com/maxorlove/ai-for-developers-project-386/issues/1). Принятые решения собраны в [карте первого проекта](https://github.com/maxorlove/ai-for-developers-project-386/issues/14). Выбор отдельной страницы записи зафиксирован в [архитектурном решении первого проекта](https://github.com/maxorlove/ai-for-developers-project-386/blob/09d9574b7145d01a2c6e97935a63e5b2fea8d86c/docs/adr/0001-booking-entrypoint.md).
 
 Учебный проект Хекслета: https://ru.hexlet.io/programs/ai-for-developers
 Как это должно работать: https://files.hexlet.app/a/2ipc5m
