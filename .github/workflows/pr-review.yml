@@ -1,0 +1,77 @@
+name: Calendar review
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+concurrency:
+  group: calendar-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      (contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association) ||
+       github.event.pull_request.user.login == 'opencode-agent[bot]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: read
+      checks: read
+      pull-requests: write
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Check trusted review policy
+        id: policy
+        run: |
+          if [[ -f REVIEW.md && -f .github/scripts/review-context.py ]]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Initial setup PR: review policy will apply after merge." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Collect review material
+        if: steps.policy.outputs.available == 'true'
+        id: context
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/review-context.py
+      - name: Review with OpenCode
+        if: steps.policy.outputs.available == 'true'
+        id: review
+        timeout-minutes: 10
+        working-directory: ${{ runner.temp }}
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          OPENCODE_CONFIG_CONTENT: '{"permission":{"*":"deny"},"share":"disabled"}'
+        run: |
+          npx --yes opencode-ai@1.3.0 run --model opencode/big-pickle --format json < review-input.md > review-events.jsonl
+          jq -sr 'map(select(.type == "text") | .part.text) | join("\n")' review-events.jsonl > review.md
+          test -s review.md && grep -q '[^[:space:]]' review.md
+      - name: Publish for the reviewed head
+        if: ${{ !cancelled() && steps.policy.outputs.available == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ steps.review.outcome }}
+        run: |
+          current=$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.head.sha')
+          [[ "$current" == "$HEAD_SHA" ]] || exit 0
+          logs="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          file="$RUNNER_TEMP/published-review.md"
+          echo "Авторевью · \`$HEAD_SHA\` · [журнал]($logs)" > "$file"
+          echo >> "$file"
+          if [[ "$RESULT" == success ]]; then
+            cat "$RUNNER_TEMP/review.md" >> "$file"
+          else
+            echo "Ревью не завершено. Нужен человек." >> "$file"
+          fi
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file "$file"
