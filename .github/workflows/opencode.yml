@@ -84,7 +84,7 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          model: opencode/big-pickle
+          model: opencode/gpt-6.2-sol
           mentions: '/opencode,/oc'
           share: 'false'
 
