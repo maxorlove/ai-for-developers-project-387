@@ -62,7 +62,7 @@ docker run --rm -e PORT=8080 -p 8080:8080 call-calendar
 
 Чтобы вызвать агента, начните новый комментарий в issue, обсуждении PR или у строки diff с `/oc` или `/opencode`. Например, `/oc explain this issue`. Workflow принимает команды владельца, участников организации и соавторов репозитория. Комментарии ботов и PR из форков пропускаются.
 
-Установите [OpenCode GitHub App](https://github.com/apps/opencode-agent) для этого репозитория и добавьте ключ OpenCode в [Actions Secrets](https://github.com/maxorlove/ai-for-developers-project-387/settings/secrets/actions) под именем `OPENCODE_API_KEY`. В [opencode.yml](.github/workflows/opencode.yml) выбрана модель `opencode/big-pickle`. Публикация сессий отключена (`share: false`). Агент читает правила из `AGENTS.md`, настройки трекера из `docs/agents/` и проектные скиллы из `.agents/skills/`.
+Установите [OpenCode GitHub App](https://github.com/apps/opencode-agent) для этого репозитория. Для команд `/oc` и `/opencode` добавьте ключ OpenAI в [Actions Secrets](https://github.com/maxorlove/ai-for-developers-project-387/settings/secrets/actions) под именем `OPEN_API_KEY`. В [opencode.yml](.github/workflows/opencode.yml) выбрана модель `openai/gpt-6.2-sol`. Для триажа, авторевью и аудита нужен отдельный секрет `OPENCODE_API_KEY`. Публикация сессий отключена (`share: false`). Агент читает правила из `AGENTS.md`, настройки трекера из `docs/agents/` и проектные скиллы из `.agents/skills/`.
 
 Ответ появится в обсуждении. Ход выполнения и результат видны в [Actions → OpenCode](https://github.com/maxorlove/ai-for-developers-project-387/actions/workflows/opencode.yml). На одну задачу или PR одновременно работает один агент, до 15 минут.
 
