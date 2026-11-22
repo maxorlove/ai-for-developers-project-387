@@ -231,6 +231,8 @@ test('a guest books a call and the owner sees the same meeting', async ({ page, 
   await page.getByRole('button', { name: '10:00', exact: true }).click()
   const topic = '📞'.repeat(200)
   const topicInput = page.getByLabel('Тема звонка')
+  await expect(page.getByText('До 200 символов', { exact: true })).toBeVisible()
+  await expect(topicInput).toHaveAccessibleDescription('До 200 символов')
   await topicInput.fill(topic + 'я')
   await page.getByRole('button', { name: 'Подтвердить запись' }).click()
   await expect(topicInput).toBeFocused()
