@@ -13,8 +13,12 @@ function parseBookingRequest(body: unknown): BookingRequest | undefined {
     return undefined
   }
 
-  const { eventTypeId, startsAt } = body as Partial<Record<keyof BookingRequest, unknown>>
+  const { eventTypeId, startsAt, topic } = body as Partial<Record<keyof BookingRequest, unknown>>
   if (!isEventTypeId(eventTypeId) || typeof startsAt !== 'string') {
+    return undefined
+  }
+
+  if (topic !== undefined && (typeof topic !== 'string' || [...topic].length > 200)) {
     return undefined
   }
 
@@ -34,7 +38,7 @@ function parseBookingRequest(body: unknown): BookingRequest | undefined {
     return undefined
   }
 
-  return { eventTypeId, startsAt: new Date(startsAt).toISOString() }
+  return { eventTypeId, startsAt: new Date(startsAt).toISOString(), ...(topic?.trim() && { topic }) }
 }
 
 export function registerBookingRoutes(
@@ -46,7 +50,7 @@ export function registerBookingRoutes(
   const createBooking: RouteHandlers['createBooking'] = (request, reply) => {
     const input = parseBookingRequest(request.body)
     if (!input) {
-      reply.code(400).send({ code: 'validation_error', message: 'Проверьте идентификатор типа встречи и время начала.' })
+      reply.code(400).send({ code: 'validation_error', message: 'Проверьте тип встречи, время начала и тему звонка (до 200 символов).' })
       return
     }
 
@@ -74,6 +78,7 @@ export function registerBookingRoutes(
       eventTypeId: eventType.id,
       eventTypeTitle: eventType.title,
       ...slot,
+      ...(input.topic && { topic: input.topic }),
     }
     bookings.push(booking)
     reply.code(201).send(booking)

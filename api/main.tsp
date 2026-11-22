@@ -88,15 +88,20 @@ model EventTypeNotFoundResponse {
 @route("/api/event-types/{id}/slots")
 op getEventTypeSlots(@path id: string): Availability | EventTypeNotFoundResponse;
 
+@maxLength(200)
+scalar BookingTopic extends string;
+
 model Booking extends Slot {
   id: string;
   eventTypeId: EventTypeId;
   eventTypeTitle: string;
+  topic?: BookingTopic;
 }
 
 model BookingRequest {
   eventTypeId: EventTypeId;
   startsAt: offsetDateTime;
+  topic?: BookingTopic;
 }
 
 model BookingCreatedResponse extends CreatedResponse {

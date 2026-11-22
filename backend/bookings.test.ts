@@ -18,8 +18,8 @@ async function startApp(context: TestContext, clock = () => new Date('2026-11-20
   return app.listen({ host: '127.0.0.1', port: 0 })
 }
 
-function book(url: string, eventTypeId: string, startsAt: string) {
-  return postJson(url, JSON.stringify({ eventTypeId, startsAt }))
+function book(url: string, eventTypeId: string, startsAt: string, topic?: string) {
+  return postJson(url, JSON.stringify({ eventTypeId, startsAt, topic }))
 }
 
 function postJson(url: string, body: string) {
@@ -118,15 +118,23 @@ test('bookings report an unknown event type', async (context) => {
 
 test('bookings reject partial overlap across event types and allow adjacent slots', async (context) => {
   const url = await startApp(context)
-  const first = await book(url, 'intro', '2026-11-21T07:00:00Z')
-  assert.equal(first.status, 201)
-  await assertJsonResponse(first, 'post', bookingsPath)
+  const topic = '📞'.repeat(200)
+  const tooLong = await book(url, 'intro', '2026-11-21T07:00:00Z', topic + 'я')
+  assert.equal(tooLong.status, 400)
+  assert.equal((await tooLong.json()).code, 'validation_error')
+  assert.deepEqual(await listBookings(url), [])
 
-  const overlap = await book(url, 'brief', '2026-11-21T07:30:00Z')
+  const first = await book(url, 'intro', '2026-11-21T07:00:00Z', topic)
+  assert.equal(first.status, 201)
+  const booking = await assertJsonResponse(first, 'post', bookingsPath) as Booking
+  assert.equal(booking.topic, topic)
+
+  const overlap = await book(url, 'brief', '2026-11-21T07:30:00Z', 'Вторая тема')
   assert.equal(overlap.status, 409)
   const error = await assertJsonResponse(overlap, 'post', bookingsPath)
   assert.ok(error && typeof error === 'object' && 'code' in error)
   assert.equal(error.code, 'slot_taken')
+  assert.deepEqual(await listBookings(url), [booking])
 
   const availability = await fetch(new URL('/api/event-types/brief/slots', url))
   assert.equal(availability.status, 200)
