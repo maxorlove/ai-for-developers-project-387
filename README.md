@@ -64,6 +64,8 @@ docker run --rm -e PORT=8080 -p 8080:8080 call-calendar
 
 Установите [OpenCode GitHub App](https://github.com/apps/opencode-agent) для этого репозитория и добавьте ключ OpenCode в [Actions Secrets](https://github.com/maxorlove/ai-for-developers-project-387/settings/secrets/actions) под именем `OPENCODE_API_KEY`. В [opencode.yml](.github/workflows/opencode.yml) выбрана модель `opencode/big-pickle`. Публикация сессий отключена (`share: false`). Агент читает правила из `AGENTS.md`, настройки трекера из `docs/agents/` и проектные скиллы из `.agents/skills/`.
 
+Укажите имя скилла в команде, например `/oc запусти to-spec по обсуждению этой задачи`. Скилл `to-spec` оформляет обсуждение в спецификацию, `to-tickets` разбивает её на связанные задачи в GitHub Issues, а `implement-spec` выполняет согласованные задачи.
+
 Ответ появится в обсуждении. Ход выполнения и результат видны в [Actions → OpenCode](https://github.com/maxorlove/ai-for-developers-project-387/actions/workflows/opencode.yml). На одну задачу или PR одновременно работает один агент, до 15 минут.
 
 ## Проверки
