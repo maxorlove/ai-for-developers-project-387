@@ -58,6 +58,14 @@ docker run --rm -e PORT=8080 -p 8080:8080 call-calendar
 
 Для работы через Codex используйте шаблон `.codex/config.toml.example`. Скопируйте его в `.codex/config.toml` или добавьте из него блок в существующий файл. Из корня проекта запустите `codex mcp login render` и завершите вход через OAuth в браузере. Данные OAuth остаются в локальном хранилище Codex.
 
+## OpenCode в GitHub
+
+Чтобы вызвать агента, начните новый комментарий в issue, обсуждении PR или у строки diff с `/oc` или `/opencode`. Например, `/oc explain this issue`. Workflow принимает команды владельца, участников организации и соавторов репозитория. Комментарии ботов и PR из форков пропускаются.
+
+Установите [OpenCode GitHub App](https://github.com/apps/opencode-agent) для этого репозитория и добавьте ключ OpenCode в [Actions Secrets](https://github.com/maxorlove/ai-for-developers-project-387/settings/secrets/actions) под именем `OPENCODE_API_KEY`. В [opencode.yml](.github/workflows/opencode.yml) выбрана модель `opencode/big-pickle`. Публикация сессий отключена (`share: false`). Агент читает правила из `AGENTS.md`, настройки трекера из `docs/agents/` и проектные скиллы из `.agents/skills/`.
+
+Ответ появится в обсуждении. Ход выполнения и результат видны в [Actions → OpenCode](https://github.com/maxorlove/ai-for-developers-project-387/actions/workflows/opencode.yml). На одну задачу или PR одновременно работает один агент, до 15 минут.
+
 ## Проверки
 
 Перед первым запуском проверок установите Chromium для Playwright.
