@@ -1,15 +1,21 @@
 name: Project checks
 
-on: push
+on:
+  push:
+  pull_request:
 
 permissions:
   contents: read
 
 jobs:
   check:
+    name: ${{ github.event_name == 'pull_request' && 'PR checks' || 'check' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
@@ -17,3 +23,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps --only-shell chromium
       - run: pnpm check
+        env:
+          PR_BROWSER_REPORT: ${{ github.event_name == 'pull_request' && '1' || '' }}
+      - name: Record checked commit
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          mkdir -p playwright-report
+          git rev-parse HEAD > playwright-report/head-sha.txt
+      - uses: actions/upload-artifact@v4
+        if: always() && github.event_name == 'pull_request'
+        with:
+          name: browser-${{ github.event.pull_request.head.sha }}
+          path: playwright-report/
+          retention-days: 14
